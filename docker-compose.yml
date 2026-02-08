@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # --- SERVICIO 1: PROXY INVERSO (NGINX) ---
+  nginx-proxy:
+    image: nginx:latest
+    container_name: nginx-proxy
+    # Montamos el archivo de configuración para sobreescribir el de defecto
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    # Mapeo de puertos: El 80 de tu PC (izq) va al 80 del contenedor (der)
+    # Es el ÚNICO puerto abierto al exterior (Seguridad Perimetral)
+    ports:
+      - [cite_start]"80:80" [cite: 67]
+    # Espera a que la API arranque antes de iniciar el proxy
+    depends_on:
+      - api-service
+    networks:
+      - red-interna
+
+  # --- SERVICIO 2: BACKEND (PYTHON/FLASK) ---
+  api-service:
+    # Construye la imagen usando el Dockerfile de la carpeta 'api'
+    build: ./api
+    container_name: api-service
+    # 'expose' hace que el puerto sea visible SOLO para otros contenedores,
+    # NO para tu ordenador (Seguridad)
+    expose:
+      - [cite_start]"8080" [cite: 66]
+    # Variable de entorno para saber dónde está Redis
+    environment:
+      - REDIS_HOST=redis-server
+    networks:
+      - red-interna
+
+  # --- SERVICIO 3: BASE DE DATOS (REDIS) ---
+  redis-server:
+    image: redis:alpine
+    container_name: redis-server
+    # Puerto interno 6379, solo accesible por api-service
+    expose:
+      - [cite_start]"6379" [cite: 70]
+    networks:
+      - red-interna
+
+# Definimos una red privada para que los contenedores se vean entre sí
+networks:
+  red-interna:
+    driver: bridge
