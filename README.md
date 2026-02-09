@@ -31,7 +31,20 @@ Usuario  │ (Puerto 80)  ─┼───────►│ (Puerto 8080) │   
                                   └───────────────┘             │
       └─────────────────────────────────────────────────────────┘
 ```
-## 3. Instrucciones de Despliegue
+## 3. Scripts de Automatización y Recuperación
+Para facilitar la gestión del entorno y asegurar la disponibilidad ante fallos, se han incluido scripts de Bash:
+
+* **`./desplegar.sh`**: Automatiza el ciclo de vida del despliegue.
+  - Levanta los contenedores con `docker-compose up -d --build`.
+  - Espera a que los servicios arranquen.
+  - Realiza un test de conexión (`curl`) para confirmar que el proxy responde correctamente (HTTP 200).
+
+* **`./recuperar.sh`**: Implementa una política de **Disaster Recovery**.
+  - Si se elimina accidentalmente algún archivo de configuración crítico (ej: `docker-compose.yml`), este script restaura la última versión estable directamente desde el repositorio Git local.
+
+> **Nota:** Recuerda dar permisos de ejecución antes de usarlos con el comando: `chmod +x *.sh`
+
+## 4. Instrucciones de Despliegue
 Para levantar el entorno en clase, sigue estos pasos:
 
 1. Clonar el repositorio:
