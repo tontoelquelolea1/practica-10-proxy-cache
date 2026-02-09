@@ -1,20 +1,17 @@
 #!/bin/bash
-echo "🚀 Iniciando despliegue de la Práctica 10..."
+# Script de despliegue y verificacion automatica
 
-# 1. Levantar contenedores
-docker-compose up -d --build
+# Levanta los contenedores en segundo plano recreando imagenes si hay cambios
+sudo docker compose up -d --build --remove-orphans
 
-# 2. Esperar un momento a que los servicios arranquen
-echo "⏳ Esperando a que los servicios estén listos..."
+# Tiempo de espera para asegurar el arranque de los servicios
 sleep 5
 
-# 3. Comprobación automática
-echo "🔍 Verificando estado del servicio..."
+# Verificacion del estado del Proxy mediante codigo de respuesta HTTP
 STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
 
 if [ $STATUS -eq 200 ]; then
-    echo "✅ ¡ÉXITO! El proxy responde correctamente (HTTP 200)."
-    echo "Prueba a ejecutar: curl -I http://localhost"
+    echo "Despliegue correcto: El proxy responde (HTTP 200)"
 else
-    echo "❌ ERROR: El servicio no responde (Código: $STATUS)."
+    echo "Error en el despliegue: Codigo de respuesta $STATUS"
 fi

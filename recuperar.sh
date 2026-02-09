@@ -1,8 +1,7 @@
 #!/bin/bash
-echo "🛠️ Recuperando archivos borrados..."
+# Script de recuperacion ante borrado accidental de archivos
 
-# Git restaura cualquier archivo que falte o haya sido modificado
+# Restaura todos los archivos del repositorio al ultimo estado guardado en Git
 git checkout .
 
-echo "✅ Archivos restaurados desde el repositorio local."
-ls -l
+echo "Archivos restaurados correctamente desde el repositorio local"

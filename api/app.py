@@ -5,40 +5,24 @@ import os
 
 app = Flask(__name__)
 
-# Conexión a Redis usando el nombre del host de Docker
-# Esto permite la comunicación interna en la red privada
-cache = redis.Redis(host='redis-server', port=6379) [cite: 69]
+# Conecta al contenedor 'redis' usando el puerto estándar 6379
+cache = redis.Redis(host=os.getenv('REDIS_HOST', 'localhost'), port=6379)
 
 @app.route('/')
 def index():
-    try:
-        # INTENTO 1: Consultar Caché Nivel 2 (Redis)
-        # Es muy rápido (milisegundos)
-        data = cache.get('datos_procesados')
-        
-        if data:
-            # CACHE HIT (Redis): Devolvemos el dato guardado
-            return jsonify({
-                "source": "Redis Cache (Nivel 2) - Rápido",
-                "data": data.decode('utf-8')
-            })
-        
-        # INTENTO 2: CACHE MISS (Redis) -> Procesar
-        # Simulamos un proceso pesado de 3 segundos (Requisito de la práctica)
-        time.sleep(3) [cite: 68]
-        result = "Estos datos costaron 3 segundos en generarse."
-        
-        # Guardamos el resultado en Redis para el futuro
-        cache.set('datos_procesados', result) [cite: 69]
-        
-        return jsonify({
-            "source": "API Backend (Python) - Lento",
-            "data": result
-        })
-            
-    except redis.ConnectionError:
-        return jsonify({"error": "No se pudo conectar a Redis"}), 500
+    # PASO 1: Buscar en Caché L2 (Redis)
+    cached_res = cache.get('data')
+    if cached_res:
+        return jsonify({"data": cached_res.decode('utf-8'), "source": "Redis Cache (Nivel 2)"})
+
+    # PASO 2: Si no está en caché, "trabajar" (simula proceso pesado)
+    time.sleep(3)
+    data = "Resultado de operacion pesada"
+    
+    # PASO 3: Guardar en Redis por 300 segundos para la próxima vez
+    cache.setex('data', 300, data)
+    
+    return jsonify({"data": data, "source": "API Backend (Calculado)"})
 
 if __name__ == '__main__':
-    # Escuchamos en 0.0.0.0 para aceptar conexiones externas (del proxy)
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=5000) # Escucha en todas las IPs del contenedor
